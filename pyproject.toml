@@ -11,7 +11,11 @@ disable = [
     "too-few-public-methods",
     "no-else-return",
     "duplicate-code",
+    "consider-using-with",
+    "unspecified-encoding",
     "too-many-branches",
+    "too-many-locals",
+    "pointless-string-statement",
     "redefined-builtin",
     "dangerous-default-value",
 ]
@@ -20,6 +24,11 @@ disable = [
 max-line-length = 88
 
 [[tool.mypy.overrides]]
+module = [
+    'src.*',
+    'pandas',
+    'sklearn.model_selection',
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
