@@ -1,12 +1,14 @@
 """Optimizer Utilites"""
 from typing import List
 
-import torch
+import bitsandbytes as bnb
 from torch import nn
 from torch.optim import Optimizer
 
 
-def fetch_optimizer(model: nn.Module, weight_decay: float) -> Optimizer:
+def fetch_optimizer(
+    model: nn.Module, weight_decay: float, learning_rate: float = 1e-5
+) -> Optimizer:
     """
     Create Optimizer
 
@@ -14,6 +16,8 @@ def fetch_optimizer(model: nn.Module, weight_decay: float) -> Optimizer:
     :type model: nn.Module
     :param weight_decay: Weight Decay Value
     :type weight_decay: float
+    :param learning_rate: Learning Rate
+    :type learning_rate: float
     :return: Optimizer
     :rtype: torch.optim.Optimizer
     """
@@ -34,6 +38,6 @@ def fetch_optimizer(model: nn.Module, weight_decay: float) -> Optimizer:
         },
     ]
 
-    optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=3e-5)
+    optimizer = bnb.optim.AdamW8bit(optimizer_grouped_parameters, lr=learning_rate)
 
     return optimizer
