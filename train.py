@@ -1,5 +1,4 @@
 """Training Code"""
-import argparse
 import gc
 import logging
 import os
@@ -17,7 +16,7 @@ from src.io.dataset import get_dataloader
 from src.nn.engine import train_fn, validation_fn
 from src.nn.model import MarkdownModel
 from src.nn.optimizers import fetch_optimizer
-from src.utils import set_seed
+from src.utils import parse_args, set_seed
 
 FORMAT = "%(message)s"
 logging.basicConfig(
@@ -32,37 +31,13 @@ if not os.path.exists("data/processed"):
 if not os.path.exists("models"):
     os.mkdir("models")
 
-parser = argparse.ArgumentParser(description="Process some arguments")
-parser.add_argument("--model_name_or_path", type=str, default="microsoft/codebert-base")
-parser.add_argument(
-    "--train_mark_path", type=str, default="data/processed/train_mark.csv"
-)
-parser.add_argument(
-    "--train_features_path", type=str, default="data/processed/train_fts.json"
-)
-parser.add_argument("--val_mark_path", type=str, default="data/processed/val_mark.csv")
-parser.add_argument(
-    "--val_features_path", type=str, default="data/processed/val_fts.json"
-)
-parser.add_argument("--val_path", type=str, default="data/processed/val.csv")
-
-parser.add_argument("--weight_decay", type=float, default=1e-6)
-parser.add_argument("--md_max_len", type=int, default=64)
-parser.add_argument("--total_max_len", type=int, default=512)
-parser.add_argument("--batch_size", type=int, default=16)
-parser.add_argument("--accumulation_steps", type=int, default=4)
-parser.add_argument("--epochs", type=int, default=5)
-parser.add_argument("--n_workers", type=int, default=8)
-
-args = parser.parse_args()
-if not os.path.exists("models"):
-    os.mkdir("models")
 data_dir = Path("data/")
 
 if __name__ == "__main__":
 
     # Miscellaneous
     set_seed(seed=42)
+    args = parse_args()
 
     # Initialize a Weights & Biases Run
     wandb.init(
