@@ -7,9 +7,11 @@ from pathlib import Path
 
 import torch
 import transformers
+from rich import print
 from rich.logging import RichHandler
 from transformers import get_linear_schedule_with_warmup
 
+import wandb
 from src.io.data import preprocess_fn, read_processed_data, serialize_dataframes
 from src.io.dataset import get_dataloader
 from src.nn.engine import train_fn, validation_fn
@@ -62,6 +64,13 @@ if __name__ == "__main__":
     # Miscellaneous
     set_seed(seed=42)
 
+    # Initialize a Weights & Biases Run
+    wandb.init(
+        project="ai4code",
+        job_type="train",
+        group=str(args.model_name_or_path),
+    )
+
     # Pre-Process Data
     logger.info("Pre-Process Data")
     train_df, val_df = preprocess_fn(
@@ -94,6 +103,13 @@ if __name__ == "__main__":
     model = MarkdownModel(args.model_name_or_path)
     model = model.cuda()
 
+    # Get Number of Parameters
+    trainable_model_params = sum(
+        p.numel() for p in model.parameters() if p.requires_grad
+    )
+    print(f"Model Parameters:{trainable_model_params}")
+    wandb.run.summary["Model Parameters"] = trainable_model_params  # type: ignore
+
     # Create Optimizer
     logger.info("Creating Optimizer")
     optimizer = fetch_optimizer(model=model, weight_decay=args.weight_decay)
@@ -123,5 +139,8 @@ if __name__ == "__main__":
             accumulation_steps=args.accumulation_steps,
         )
         validation_fn(model, val_loader, val_df, df_orders)
+        wandb.log({"Learning Rate": scheduler.get_last_lr()})
         scheduler.step()
         _ = gc.collect()
+
+    wandb.finish()
