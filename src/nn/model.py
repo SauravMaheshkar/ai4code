@@ -9,7 +9,6 @@ class MarkdownModel(nn.Module):
 
     def __init__(self, model_name_or_path: str):
         super().__init__()
-        self.model = AutoModel.from_pretrained(model_name_or_path)
         self.config = AutoConfig.from_pretrained(model_name_or_path)
         self.config.update(
             {
@@ -17,6 +16,7 @@ class MarkdownModel(nn.Module):
                 "gradient_checkpointing": True,
             }
         )
+        self.model = AutoModel.from_config(self.config)
         self.top = nn.Linear(769, 1)
 
     def forward(
