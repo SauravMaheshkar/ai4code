@@ -1,4 +1,5 @@
 """Training Utilites"""
+import gc
 from typing import Callable, Iterable, List, Tuple
 
 import numpy as np
@@ -8,6 +9,7 @@ from rich import print
 from rich.progress import track
 from torch import nn
 
+import wandb
 from src.nn.metrics import kendall_tau
 
 
@@ -61,7 +63,12 @@ def validation_fn(
     val_df["pred"] = val_df.groupby(["id", "cell_type"])["rank"].rank(pct=True)
     val_df.loc[val_df["cell_type"] == "markdown", "pred"] = y_pred
     y_dummy = val_df.sort_values("pred").groupby("id")["cell_id"].apply(list)
-    print("Preds score", kendall_tau(df_orders.loc[y_dummy.index], y_dummy))
+    kendall_tau_score = kendall_tau(df_orders.loc[y_dummy.index], y_dummy)
+    print("Preds score", kendall_tau_score)
+
+    # Log Metrics
+    wandb.log({"Valid/Kendall Tau Score": kendall_tau_score})
+
     torch.save(model.state_dict(), "./models/model.bin")
 
 
@@ -115,9 +122,11 @@ def train_fn(
         loss_list.append(loss.detach().cpu().item())
         preds.append(pred.detach().cpu().numpy().ravel())
         labels.append(target.detach().cpu().numpy().ravel())
+        avg_loss = np.round(np.mean(loss_list), 4)
 
-        # avg_loss = np.round(np.mean(loss_list), 4)
+        # Log Metrics
+        wandb.log({"Train/Loss": loss.detach().cpu().item()})
+        wandb.log({"Train/Avg Loss": avg_loss})
 
-        """tbar.set_description(
-            f"Epoch {e + 1} Loss: {avg_loss} lr: {scheduler.get_last_lr()}"
-        )"""
+        torch.cuda.empty_cache()
+        _ = gc.collect()
