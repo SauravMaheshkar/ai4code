@@ -1,15 +1,22 @@
 """Custom Model"""
 import torch
 from torch import nn
-from transformers import AutoModel
+from transformers import AutoConfig, AutoModel
 
 
 class MarkdownModel(nn.Module):
     """Custom Model Class"""
 
-    def __init__(self, model_path: str):
+    def __init__(self, model_name_or_path: str):
         super().__init__()
-        self.model = AutoModel.from_pretrained(model_path)
+        self.model = AutoModel.from_pretrained(model_name_or_path)
+        self.config = AutoConfig.from_pretrained(model_name_or_path)
+        self.config.update(
+            {
+                "hidden_dropout_prob": 0.0,
+                "gradient_checkpointing": True,
+            }
+        )
         self.top = nn.Linear(769, 1)
 
     def forward(
