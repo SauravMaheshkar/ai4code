@@ -44,6 +44,7 @@ if __name__ == "__main__":
         project="ai4code",
         job_type="train",
         group=str(args.model_name_or_path),
+        config=vars(args),
     )
 
     # Pre-Process Data
